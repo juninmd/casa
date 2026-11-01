@@ -10,7 +10,8 @@
     "test": "bun test",
     "lint": "biome check src scripts",
     "tauri": "tauri",
-    "gen:oui": "bun scripts/gen-oui.ts"
+    "gen:oui": "bun scripts/gen-oui.ts",
+    "screenshots": "bun run build && bun scripts/readme-screenshots.ts"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "5.3.0",

@@ -69,8 +69,8 @@ export function NetworkPage() {
       )}
       {scanMode === "demo" && (
         <p className="glass rounded-2xl p-3 text-sm text-mute">
-          Modo demo: o navegador não tem acesso à rede, então mostro um retrato real (MACs
-          mascarados). No app Tauri a varredura é nativa.
+          Modo demo: o navegador não tem acesso à rede, então mostro uma rede de exemplo (endereços
+          e MACs fictícios). No app Tauri a varredura é nativa.
         </p>
       )}
 
