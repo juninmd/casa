@@ -2,5 +2,6 @@ version: 2
 updates:
   - package-ecosystem: "cargo"
     directory: "/src-tauri"
+    schedule: daily
     ignore:
       - dependency-name: "glib"
