@@ -2,3 +2,7 @@ node_modules
 dist
 src-tauri/target
 src-tauri/gen
+.playwright-mcp
+# Raw LAN scan holds real MACs and hostnames: keep it local.
+research/lan-scan.json
+research/00-mapa-da-rede.md
