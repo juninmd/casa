@@ -188,4 +188,4 @@ Levantamento feito em 2026-11-01 sobre a documentação pública de cada projeto
 
 ## Licença
 
-Ainda não definida. Até que um arquivo `LICENSE` seja adicionado, vale o padrão do GitHub: todos os direitos reservados ao autor.
+[MIT](LICENSE).
