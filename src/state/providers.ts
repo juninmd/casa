@@ -53,6 +53,8 @@ export function toEntity(d: DeviceDto, room: string): Entity {
   };
 }
 
+let refreshSeq = 0;
+
 export const useProviders = create<ProvidersStore>((set, get) => ({
   providers: [],
   errors: {},
@@ -78,18 +80,24 @@ export const useProviders = create<ProvidersStore>((set, get) => ({
       set({ errors: {} });
       return;
     }
+    const seq = ++refreshSeq;
+    const epoch = useStore.getState().commandEpoch;
     set({ refreshing: true });
     try {
       const { devices, errors } = await listDevices();
-      const labels = new Map(get().providers.map((p) => [p.id, p.label]));
-      useStore
-        .getState()
-        .setProviderEntities(devices.map((d) => toEntity(d, labels.get(d.providerId) ?? "Casa")));
+      // A newer poll, or a command that started/finished meanwhile, makes this snapshot stale:
+      // applying it would flip a just-toggled device back to its old state until the next poll.
+      if (seq === refreshSeq && useStore.getState().commandEpoch === epoch) {
+        const labels = new Map(get().providers.map((p) => [p.id, p.label]));
+        useStore
+          .getState()
+          .setProviderEntities(devices.map((d) => toEntity(d, labels.get(d.providerId) ?? "Casa")));
+      }
       set({ errors: Object.fromEntries(errors.map((x) => [x.providerId, x.message])) });
     } catch (e) {
       set({ errors: { _: errText(e) } });
     } finally {
-      set({ refreshing: false });
+      if (seq === refreshSeq) set({ refreshing: false });
     }
   },
 

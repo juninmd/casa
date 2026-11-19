@@ -24,15 +24,18 @@ export async function syncReal(prev: Entity[], next: Entity[], hooks: SyncHooks)
     jobs.map(async (e) => {
       if (!e.providerId || !e.deviceId) return;
       hooks.busy(e.id, true);
+      let failed = false;
       try {
         const d = await setPower(e.providerId, e.deviceId, e.on);
         hooks.patch(e.id, { on: d.on, online: d.online, detail: d.detail ?? undefined });
       } catch (err) {
         hooks.patch(e.id, { on: before.get(e.id) ?? !e.on });
         hooks.notify(`${e.name}: ${errText(err)}`);
-        hooks.refresh();
+        failed = true;
       } finally {
         hooks.busy(e.id, false);
+        // After release, so the re-read is not discarded as a poll that raced with this command.
+        if (failed) hooks.refresh();
       }
     }),
   );
