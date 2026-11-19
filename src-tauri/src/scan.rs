@@ -111,8 +111,9 @@ fn read_arp() -> String {
 pub fn parse_server(head: &str) -> Option<String> {
     head.lines()
         .find_map(|l| {
-            l.strip_prefix("Server:")
-                .or_else(|| l.strip_prefix("server:"))
+            // Header names are case-insensitive (RFC 9110): `SERVER:` is as valid as `Server:`.
+            let (name, value) = l.split_once(':')?;
+            name.eq_ignore_ascii_case("server").then_some(value)
         })
         .map(|v| v.trim().chars().take(80).collect::<String>())
         .filter(|v| !v.is_empty())
@@ -294,6 +295,11 @@ Content-Length: 0
             None
         );
         assert_eq!(parse_server(""), None);
+        assert_eq!(
+            parse_server("HTTP/1.0 200\r\nSERVER: Boa/0.94.14rc21\r\n\r\n"),
+            Some("Boa/0.94.14rc21".into())
+        );
+        assert_eq!(parse_server("HTTP/1.0 200\r\nX-Server: other\r\n\r\n"), None);
     }
 
     #[test]
