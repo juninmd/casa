@@ -23,6 +23,8 @@ interface Store {
   notice: string | null;
   /** Entities with a command in flight: not togglable and not overwritten by polling. */
   pending: Record<string, true>;
+  /** Bumped whenever a command starts or ends, so a poll that raced with one can be discarded. */
+  commandEpoch: number;
   /** Set by the providers store so a failed command can trigger a re-read. */
   refresher: () => void;
   setRefresher: (fn: () => void) => void;
@@ -55,6 +57,7 @@ export const useStore = create<Store>((set, get) => ({
   scanError: null,
   notice: null,
   pending: {},
+  commandEpoch: 0,
   refresher: () => {},
   setRefresher: (refresher) => set({ refresher }),
 
@@ -109,7 +112,7 @@ export const useStore = create<Store>((set, get) => ({
         const pending = { ...get().pending };
         if (on) pending[id] = true;
         else delete pending[id];
-        set({ pending });
+        set({ pending, commandEpoch: get().commandEpoch + 1 });
       },
       refresh: () => get().refresher(),
     }),

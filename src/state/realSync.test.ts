@@ -1,11 +1,18 @@
 import { beforeEach, describe, expect, mock, test } from "bun:test";
 import type { Entity } from "../core/types";
+import type { DeviceDto } from "../platform/providers";
 
 const calls: string[] = [];
 let failFor = "";
+let polls: Array<(r: { devices: DeviceDto[]; errors: [] }) => void> = [];
 
 mock.module("../platform/providers", () => ({
   errText: (e: unknown) => (e instanceof Error ? e.message : String(e)),
+  // Each poll stays on the wire until the test resolves it, to reproduce overlapping reads.
+  listDevices: () => new Promise((resolve) => polls.push(resolve as never)),
+  listProviders: async () => [],
+  saveProvider: async () => ({}),
+  removeProvider: async () => {},
   setPower: async (providerId: string, deviceId: string, on: boolean) => {
     calls.push(`${providerId}/${deviceId}=${on}`);
     if (deviceId === failFor) throw new Error("recusado");
@@ -14,6 +21,8 @@ mock.module("../platform/providers", () => ({
 }));
 
 const { syncReal } = await import("./realSync");
+const { useProviders } = await import("./providers");
+const { useStore } = await import("./store");
 
 const ent = (id: string, over: Partial<Entity> = {}): Entity => ({
   id,
@@ -105,5 +114,63 @@ describe("syncReal", () => {
     await syncReal([ent("a"), ent("b")], [ent("a", { on: true }), ent("b", { on: true })], h);
     expect(log.patches.a?.on).toBe(false);
     expect(log.patches.b?.on).toBe(true);
+  });
+});
+
+describe("refresh racing with commands", () => {
+  const dto = (on: boolean): DeviceDto => ({
+    id: "d1",
+    providerId: "p1",
+    name: "Plug",
+    kind: "switch",
+    on,
+    online: true,
+    controllable: true,
+    detail: null,
+  });
+  const plugOn = () => useStore.getState().entities.find((e) => e.id === "p1:d1")?.on;
+
+  beforeEach(() => {
+    polls = [];
+    useStore.setState({ entities: [ent("p1:d1", { on: true })], pending: {}, commandEpoch: 0 });
+    useProviders.setState({
+      providers: [
+        {
+          id: "p1",
+          kind: "tapo",
+          label: "Casa",
+          hosts: [],
+          allowSelfSigned: false,
+          hasCredentials: true,
+        },
+      ],
+      refreshing: false,
+    });
+  });
+
+  test("applies the snapshot when nothing raced with it", async () => {
+    const p = useProviders.getState().refresh();
+    polls[0]?.({ devices: [dto(false)], errors: [] });
+    await p;
+    expect(plugOn()).toBe(false);
+  });
+
+  test("discards a snapshot read while a command started and finished", async () => {
+    const p = useProviders.getState().refresh();
+    useStore.setState({ commandEpoch: useStore.getState().commandEpoch + 2 });
+    polls[0]?.({ devices: [dto(false)], errors: [] });
+    await p;
+    expect(plugOn()).toBe(true); // stale read must not flip the toggled device back
+  });
+
+  test("an older poll never overwrites a newer one", async () => {
+    const older = useProviders.getState().refresh();
+    const newer = useProviders.getState().refresh();
+    polls[1]?.({ devices: [dto(false)], errors: [] });
+    await newer;
+    polls[0]?.({ devices: [dto(true)], errors: [] });
+    await older;
+    expect(plugOn()).toBe(false);
+    expect(useProviders.getState().refreshing).toBe(false);
   });
 });
