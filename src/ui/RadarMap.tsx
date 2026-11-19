@@ -75,7 +75,11 @@ export function RadarMap({ items, scanning, hover, onHover, onPick }: Props) {
             onFocus={() => onHover(s.host.ip)}
             onBlur={() => onHover(null)}
             onClick={() => onPick(s.host.ip)}
-            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onPick(s.host.ip)}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter" && e.key !== " ") return;
+              e.preventDefault(); // Space would otherwise also scroll the page
+              onPick(s.host.ip);
+            }}
             className="pop cursor-pointer outline-none"
             style={{ "--i": i } as React.CSSProperties}
           >
