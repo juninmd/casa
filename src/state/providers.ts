@@ -75,12 +75,12 @@ export const useProviders = create<ProvidersStore>((set, get) => ({
   },
 
   refresh: async () => {
+    const seq = ++refreshSeq; // also invalidates a poll still in flight when the last provider goes away
     if (get().providers.length === 0) {
       useStore.getState().setProviderEntities([]);
-      set({ errors: {} });
+      set({ errors: {}, refreshing: false });
       return;
     }
-    const seq = ++refreshSeq;
     const epoch = useStore.getState().commandEpoch;
     set({ refreshing: true });
     try {
