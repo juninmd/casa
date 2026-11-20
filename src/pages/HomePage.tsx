@@ -1,6 +1,6 @@
 import { ArrowsClockwise, FilmSlate, Moon, SignOut } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
-import { SCENES } from "../data/demo";
+import { availableScenes } from "../data/demo";
 import { useProviders, useVisibleEntities } from "../state/providers";
 import { useStore } from "../state/store";
 import { DeviceCard } from "../ui/DeviceCard";
@@ -18,6 +18,7 @@ export function HomePage({ onOpenProviders }: { onOpenProviders: () => void }) {
   const rooms = useMemo(() => ["Todos", ...new Set(entities.map((e) => e.room))], [entities]);
   const current = rooms.includes(room) ? room : "Todos";
   const shown = current === "Todos" ? entities : entities.filter((e) => e.room === current);
+  const scenes = useMemo(() => availableScenes(entities), [entities]);
   const roomStats = (r: string) => {
     const list = r === "Todos" ? entities : entities.filter((e) => e.room === r);
     return {
@@ -55,36 +56,38 @@ export function HomePage({ onOpenProviders }: { onOpenProviders: () => void }) {
         </p>
       ))}
 
-      <section
-        aria-label="Cenas"
-        className="no-scrollbar flex items-center gap-2 overflow-x-auto py-1"
-      >
-        {SCENES.map((s) => {
-          const Icon = SCENE_ICON[s.id as keyof typeof SCENE_ICON] ?? Moon;
-          return (
+      {(scenes.length > 0 || providers.length > 0) && (
+        <section
+          aria-label="Cenas"
+          className="no-scrollbar flex items-center gap-2 overflow-x-auto py-1"
+        >
+          {scenes.map((s) => {
+            const Icon = SCENE_ICON[s.id as keyof typeof SCENE_ICON] ?? Moon;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => applyScene(s.id)}
+                className="glass flex min-h-12 shrink-0 items-center gap-2 rounded-full px-5 text-sm font-medium transition-transform active:scale-95"
+              >
+                <Icon size={20} weight="duotone" className="text-amber" aria-hidden />
+                {s.name}
+              </button>
+            );
+          })}
+          {providers.length > 0 && (
             <button
-              key={s.id}
               type="button"
-              onClick={() => applyScene(s.id)}
-              className="glass flex min-h-12 shrink-0 items-center gap-2 rounded-full px-5 text-sm font-medium transition-transform active:scale-95"
+              onClick={() => void refresh()}
+              disabled={refreshing}
+              aria-label="Atualizar dispositivos"
+              className="glass ml-auto grid size-12 shrink-0 place-items-center rounded-full disabled:opacity-60"
             >
-              <Icon size={20} weight="duotone" className="text-amber" aria-hidden />
-              {s.name}
+              <ArrowsClockwise size={20} aria-hidden className={refreshing ? "animate-spin" : ""} />
             </button>
-          );
-        })}
-        {providers.length > 0 && (
-          <button
-            type="button"
-            onClick={() => void refresh()}
-            disabled={refreshing}
-            aria-label="Atualizar dispositivos"
-            className="glass ml-auto grid size-12 shrink-0 place-items-center rounded-full disabled:opacity-60"
-          >
-            <ArrowsClockwise size={20} aria-hidden className={refreshing ? "animate-spin" : ""} />
-          </button>
-        )}
-      </section>
+          )}
+        </section>
+      )}
 
       <div
         role="tablist"
