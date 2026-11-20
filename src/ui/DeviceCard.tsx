@@ -6,6 +6,8 @@ interface Props {
   entity: Entity;
   onToggle: (id: string) => void;
   index?: number;
+  /** A command for this device is in flight: further taps are ignored by the store until it settles. */
+  busy?: boolean;
 }
 
 function statusOf(e: Entity): string {
@@ -22,7 +24,7 @@ function badgeOf(e: Entity): string | null {
   return e.controllable ? null : "somente leitura";
 }
 
-export function DeviceCard({ entity, onToggle, index = 0 }: Props) {
+export function DeviceCard({ entity, onToggle, index = 0, busy = false }: Props) {
   const Icon = KIND_ICON[entity.kind];
   const color = KIND_COLOR[entity.kind];
   const readOnly =
@@ -51,6 +53,7 @@ export function DeviceCard({ entity, onToggle, index = 0 }: Props) {
       type="button"
       title={entity.online ? undefined : (entity.detail ?? undefined)}
       {...(readOnly ? { "aria-disabled": true } : { role: "switch", "aria-checked": entity.on })}
+      aria-busy={busy || undefined}
       onClick={() => onToggle(entity.id)}
       onAnimationEnd={(e) => e.currentTarget.classList.remove("ripple")}
       style={
@@ -63,8 +66,8 @@ export function DeviceCard({ entity, onToggle, index = 0 }: Props) {
         } as React.CSSProperties
       }
       className={`rise glass spot flex min-h-32 w-full flex-col justify-between rounded-3xl p-4 text-left transition-[transform,border-color,background-image] duration-300 ${
-        readOnly ? "cursor-default" : "active:scale-[0.96]"
-      } ${entity.online ? "" : "opacity-55"}`}
+        readOnly ? "cursor-default" : busy ? "cursor-progress" : "active:scale-[0.96]"
+      } ${entity.online ? "" : "opacity-55"} ${busy ? "animate-pulse" : ""}`}
     >
       <span className="flex items-start justify-between">
         <span
@@ -103,7 +106,7 @@ export function DeviceCard({ entity, onToggle, index = 0 }: Props) {
           {entity.name}
         </span>
         <span className="block text-xs text-mute">
-          {entity.room} · {statusOf(entity)}
+          {entity.room} · {busy ? "Enviando…" : statusOf(entity)}
         </span>
       </span>
     </button>

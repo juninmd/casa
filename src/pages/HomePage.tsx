@@ -11,7 +11,7 @@ const SCENE_ICON = { dormir: Moon, cinema: FilmSlate, sair: SignOut } as const;
 
 export function HomePage({ onOpenProviders }: { onOpenProviders: () => void }) {
   const entities = useVisibleEntities();
-  const { toggle, applyScene, notice, setNotice } = useStore();
+  const { toggle, applyScene, notice, setNotice, pending } = useStore();
   const { errors, refreshing, refresh, providers } = useProviders();
   const [room, setRoom] = useState("Todos");
 
@@ -117,7 +117,7 @@ export function HomePage({ onOpenProviders }: { onOpenProviders: () => void }) {
           className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"
         >
           {shown.map((e, i) => (
-            <DeviceCard key={e.id} entity={e} onToggle={toggle} index={i} />
+            <DeviceCard key={e.id} entity={e} onToggle={toggle} index={i} busy={!!pending[e.id]} />
           ))}
         </section>
       )}
