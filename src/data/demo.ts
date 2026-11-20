@@ -76,3 +76,9 @@ export const SCENES: Scene[] = [
     set: { "sala-luz": false, "cozinha-luz": false, "office-luz": false, porta: true },
   },
 ];
+
+/** Scenes that touch at least one visible device; with the demo hidden they would do nothing. */
+export const availableScenes = (visible: { id: string }[]): Scene[] => {
+  const ids = new Set(visible.map((e) => e.id));
+  return SCENES.filter((s) => Object.keys(s.set).some((id) => ids.has(id)));
+};
