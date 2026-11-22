@@ -4,6 +4,8 @@ import type { DeviceDto } from "../platform/providers";
 
 const calls: string[] = [];
 let failFor = "";
+// When set, setPower waits until the test releases it, to reproduce overlapping commands.
+let held: Array<() => void> | null = null;
 let polls: Array<(r: { devices: DeviceDto[]; errors: [] }) => void> = [];
 
 mock.module("../platform/providers", () => ({
@@ -15,6 +17,7 @@ mock.module("../platform/providers", () => ({
   removeProvider: async () => {},
   setPower: async (providerId: string, deviceId: string, on: boolean) => {
     calls.push(`${providerId}/${deviceId}=${on}`);
+    if (held) await new Promise<void>((resolve) => held?.push(resolve));
     if (deviceId === failFor) throw new Error("recusado");
     return { id: deviceId, on, online: true, detail: "P110" };
   },
@@ -172,5 +175,26 @@ describe("refresh racing with commands", () => {
     await older;
     expect(plugOn()).toBe(false);
     expect(useProviders.getState().refreshing).toBe(false);
+  });
+});
+
+describe("overlapping commands to the same device", () => {
+  test("a late reply to an older command does not overwrite the newer one", async () => {
+    held = [];
+    const { log, h } = hooks();
+    // Toggle off (A), then a scene turns it on (B) before A answers.
+    const a = syncReal([ent("x", { on: true })], [ent("x", { on: false })], h);
+    const b = syncReal([ent("x", { on: false })], [ent("x", { on: true })], h);
+    await Promise.resolve();
+    const [releaseA, releaseB] = held;
+    held = null;
+    releaseB?.();
+    await b;
+    releaseA?.();
+    await a;
+
+    expect(log.patches.x?.on).toBe(true);
+    // The device stays busy until the newest command answers, and is released exactly once.
+    expect(log.busy).toEqual(["x:true", "x:true", "x:false"]);
   });
 });
