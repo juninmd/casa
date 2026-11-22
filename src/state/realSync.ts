@@ -10,6 +10,10 @@ export interface SyncHooks {
   refresh: () => void;
 }
 
+/** Newest command per entity: only its reply may touch the UI or release the busy flag. */
+const latest = new Map<string, number>();
+let seq = 0;
+
 /**
  * Sends to the real providers every provider entity whose `on` differs between `prev` and `next`.
  * `next` is already applied optimistically; on failure the entity goes back to its previous known
@@ -23,17 +27,24 @@ export async function syncReal(prev: Entity[], next: Entity[], hooks: SyncHooks)
   await Promise.all(
     jobs.map(async (e) => {
       if (!e.providerId || !e.deviceId) return;
+      const ticket = ++seq;
+      latest.set(e.id, ticket);
+      const current = () => latest.get(e.id) === ticket;
       hooks.busy(e.id, true);
       let failed = false;
       try {
         const d = await setPower(e.providerId, e.deviceId, e.on);
-        hooks.patch(e.id, { on: d.on, online: d.online, detail: d.detail ?? undefined });
+        if (current())
+          hooks.patch(e.id, { on: d.on, online: d.online, detail: d.detail ?? undefined });
       } catch (err) {
-        hooks.patch(e.id, { on: before.get(e.id) ?? !e.on });
+        if (current()) hooks.patch(e.id, { on: before.get(e.id) ?? !e.on });
         hooks.notify(`${e.name}: ${errText(err)}`);
         failed = true;
       } finally {
-        hooks.busy(e.id, false);
+        if (current()) {
+          latest.delete(e.id);
+          hooks.busy(e.id, false);
+        }
         // After release, so the re-read is not discarded as a poll that raced with this command.
         if (failed) hooks.refresh();
       }
