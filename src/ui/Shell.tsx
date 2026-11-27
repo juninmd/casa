@@ -48,8 +48,14 @@ export function Shell({ page, onNavigate, children }: Props) {
   const go = useCallback(
     (id: PageId) => {
       if (id === page) return;
-      const focusTitle = () =>
-        document.getElementById("page-title")?.focus({ preventScroll: true });
+      const focusTitle = () => {
+        // Sonido's PageHeader owns the heading; make it programmatically focusable
+        // so focus still lands on the new page's title after a transition.
+        const title = document.querySelector<HTMLElement>(".sn-pagehead__title");
+        if (!title) return;
+        title.tabIndex = -1;
+        title.focus({ preventScroll: true });
+      };
       if (!document.startViewTransition) {
         onNavigate(id);
         return;

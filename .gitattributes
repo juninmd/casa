@@ -1,0 +1,6 @@
+# Normalise line endings so Biome (LF) passes on Windows checkouts too.
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.jpg binary
+*.woff2 binary

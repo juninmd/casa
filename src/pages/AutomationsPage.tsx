@@ -1,8 +1,8 @@
+import { Button, Card, EmptyState, PageHeader, Switch } from "@juninmd/sonido";
 import { ArrowRight, Clock, Lightning, Play, ToggleLeft } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import type { Rule } from "../core/automation";
 import { useStore } from "../state/store";
-import { PageHeader } from "../ui/PageHeader";
 
 function Chip({ tone, icon, children }: { tone: string; icon: ReactNode; children: ReactNode }) {
   return (
@@ -53,61 +53,61 @@ export function AutomationsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Automações">
-        Gatilho, condições e ações executados localmente. Cascatas param em 5 níveis.
-      </PageHeader>
+      <PageHeader
+        title="Automações"
+        titleAs="h1"
+        icon={<Lightning size={22} weight="duotone" />}
+        description="Gatilho, condições e ações executados localmente. Cascatas param em 5 níveis."
+      />
 
       <ul className="space-y-3">
         {rules.map((r, i) => (
-          <li
-            key={r.id}
-            style={{ "--i": i } as React.CSSProperties}
-            className="rise glass spot flex items-start justify-between gap-4 rounded-3xl p-4"
-          >
-            <div className="min-w-0">
-              <p className="font-display text-base font-semibold">{r.name}</p>
-              {flow(r)}
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={r.enabled}
-              aria-label={`Ativar ${r.name}`}
-              onClick={() => toggleRule(r.id)}
-              className="relative mt-0.5 h-7 w-12 shrink-0 rounded-full transition-colors duration-300"
-              style={{ background: r.enabled ? "#3de0c3" : "rgb(255 255 255 / 0.16)" }}
-            >
-              <span
-                className="absolute left-0.5 top-0.5 size-6 rounded-full bg-white shadow transition-transform duration-300 ease-[var(--ease-out-expo)]"
-                style={{ transform: r.enabled ? "translateX(20px)" : "translateX(0)" }}
-              />
-            </button>
+          <li key={r.id} style={{ "--i": i } as React.CSSProperties} className="rise">
+            <Card surface="glass" padding="md" className="spot">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="font-display text-base font-semibold">{r.name}</p>
+                  {flow(r)}
+                </div>
+                <Switch
+                  checked={r.enabled}
+                  onChange={() => toggleRule(r.id)}
+                  label="Ativa"
+                  className="mt-0.5 shrink-0"
+                />
+              </div>
+            </Card>
           </li>
         ))}
       </ul>
 
-      <section className="glass flex flex-wrap items-center justify-between gap-3 rounded-3xl p-4">
-        <div>
-          <h2 className="text-base font-semibold">Simular relógio</h2>
-          <p className="text-xs text-mute">
-            Dispara as regras de horário sem esperar o dia passar.
-          </p>
+      <Card surface="glass" padding="md">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold">Simular relógio</h2>
+            <p className="text-xs text-mute">
+              Dispara as regras de horário sem esperar o dia passar.
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={() => fireTime("22:00")}
+            iconStart={<Play size={18} weight="fill" aria-hidden />}
+          >
+            Disparar 22:00
+          </Button>
         </div>
-        <button
-          type="button"
-          onClick={() => fireTime("22:00")}
-          className="flex min-h-12 items-center gap-2 rounded-2xl bg-white/10 px-5 text-sm font-medium transition-transform hover:bg-white/15 active:scale-95"
-        >
-          <Play size={18} weight="fill" aria-hidden /> Disparar 22:00
-        </button>
-      </section>
+      </Card>
 
-      <section aria-label="Registro" className="glass rounded-3xl p-4">
-        <h2 className="mb-2 text-base font-semibold">Registro</h2>
+      <Card surface="glass" padding="md" aria-label="Registro">
+        <h2 className="text-base font-semibold">Registro</h2>
         {log.length === 0 ? (
-          <p className="text-sm text-mute">
-            Nada executado ainda. Ligue a TV na aba Início para ver a regra Cinema.
-          </p>
+          <EmptyState
+            title="Nada executado ainda"
+            description="Ligue a TV na aba Início para ver a regra Cinema."
+            titleAs="p"
+          />
         ) : (
           <ul className="space-y-1 font-mono text-xs text-mute">
             {log.map((l, i) => (
@@ -116,7 +116,7 @@ export function AutomationsPage() {
             ))}
           </ul>
         )}
-      </section>
+      </Card>
     </div>
   );
 }

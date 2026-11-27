@@ -1,6 +1,6 @@
+import { Card, CountUp, PageHeader, ProgressBar, StatTile } from "@juninmd/sonido";
+import { ChartLineUp } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
-import { CountUp } from "../ui/CountUp";
-import { PageHeader } from "../ui/PageHeader";
 
 // Deterministic pseudo-series so the demo is stable; real data comes from Tapo P110 / Shelly meters.
 const HOURS = Array.from({ length: 24 }, (_, h) => {
@@ -10,11 +10,12 @@ const HOURS = Array.from({ length: 24 }, (_, h) => {
 });
 
 const DEVICES = [
-  { name: "Tomada do PC", kwh: 3.2, color: "#3de0c3" },
-  { name: "TV", kwh: 1.1, color: "#6f9bff" },
-  { name: "Luzes", kwh: 0.9, color: "#ffb547" },
-  { name: "Echo", kwh: 0.3, color: "#ff7fb0" },
+  { name: "Tomada do PC", kwh: 3.2 },
+  { name: "TV", kwh: 1.1 },
+  { name: "Luzes", kwh: 0.9 },
+  { name: "Echo", kwh: 0.3 },
 ];
+const TOP_DEVICE = 3.2;
 
 const W = 600;
 const H = 200;
@@ -61,13 +62,37 @@ export function EnergyPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Energia">
-        Dados simulados: medidores reais (Tapo P110, Shelly) entram na próxima fase.
-      </PageHeader>
+      <PageHeader
+        title="Energia"
+        titleAs="h1"
+        icon={<ChartLineUp size={22} weight="duotone" />}
+        description="Dados simulados: medidores reais (Tapo P110, Shelly) entram na próxima fase."
+        aside={
+          <div className="grid grid-cols-3 gap-2">
+            <StatTile
+              label="Hoje"
+              value={<CountUp value={total} format={(n) => n.toFixed(1)} />}
+              hint="kWh nas 24 h"
+              tone="accent"
+            />
+            <StatTile
+              label="Pico"
+              value={<CountUp value={max} format={(n) => n.toFixed(2)} />}
+              hint={`às ${String(peakHour).padStart(2, "0")}h`}
+              tone="warning"
+            />
+            <StatTile
+              label="Média"
+              value={<CountUp value={total / 24} format={(n) => n.toFixed(2)} />}
+              hint="kWh por hora"
+            />
+          </div>
+        }
+      />
 
-      <section className="glass rounded-3xl p-5">
+      <Card surface="glass" padding="md">
         <p className="font-display text-5xl font-semibold">
-          <CountUp value={total} decimals={1} />{" "}
+          <CountUp value={total} format={(n) => n.toFixed(1)} />{" "}
           <span className="text-base font-normal text-mute">kWh hoje</span>
         </p>
 
@@ -144,30 +169,24 @@ export function EnergyPage() {
           <span>12h</span>
           <span>23h</span>
         </div>
-      </section>
+      </Card>
 
-      <section className="glass space-y-4 rounded-3xl p-5">
+      <Card surface="glass" padding="md">
         <h2 className="text-lg font-semibold">Por dispositivo</h2>
-        {DEVICES.map((d, i) => (
-          <div key={d.name}>
+        {DEVICES.map((d) => (
+          <div key={d.name} className="grid gap-1">
             <div className="flex justify-between text-sm">
               <span>{d.name}</span>
               <span className="text-mute tabular-nums">{d.kwh} kWh</span>
             </div>
-            <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full transition-[width] duration-1000 ease-[var(--ease-out-expo)]"
-                style={{
-                  width: grown ? `${(d.kwh / 3.2) * 100}%` : "0%",
-                  background: `linear-gradient(90deg, ${d.color}88, ${d.color})`,
-                  transitionDelay: `${i * 90}ms`,
-                  boxShadow: `0 0 14px -2px ${d.color}`,
-                }}
-              />
-            </div>
+            <ProgressBar
+              label={`${d.name}: ${d.kwh} kWh`}
+              value={d.kwh / TOP_DEVICE}
+              tone="accent"
+            />
           </div>
         ))}
-      </section>
+      </Card>
     </div>
   );
 }
