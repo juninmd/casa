@@ -1,13 +1,33 @@
-import { MagnifyingGlass } from "@phosphor-icons/react";
+import { Badge, type BadgeTone, Card, PageHeader, Select, TextField } from "@juninmd/sonido";
+import { MagnifyingGlass, MapTrifold } from "@phosphor-icons/react";
 import { useEffect, useMemo, useState } from "react";
 import { FEATURES, type Status } from "../data/features";
-import { PageHeader } from "../ui/PageHeader";
 
-const STATUS: Record<Status, { label: string; color: string; hint: string }> = {
-  proto: { label: "No protótipo", color: "#3de0c3", hint: "já funciona neste app" },
-  viavel: { label: "Viável", color: "#ffb547", hint: "só software, cabe no Tauri+React" },
-  depende: { label: "Depende", color: "#b58cff", hint: "precisa de hardware, conta ou nuvem" },
-  fora: { label: "Fora de escopo", color: "#ff6b8b", hint: "exige servidor ou rádio dedicado" },
+const STATUS: Record<Status, { label: string; color: string; hint: string; tone: BadgeTone }> = {
+  proto: {
+    label: "No protótipo",
+    color: "#3de0c3",
+    hint: "já funciona neste app",
+    tone: "success",
+  },
+  viavel: {
+    label: "Viável",
+    color: "#ffb547",
+    hint: "só software, cabe no Tauri+React",
+    tone: "warning",
+  },
+  depende: {
+    label: "Depende",
+    color: "#b58cff",
+    hint: "precisa de hardware, conta ou nuvem",
+    tone: "violet",
+  },
+  fora: {
+    label: "Fora de escopo",
+    color: "#ff6b8b",
+    hint: "exige servidor ou rádio dedicado",
+    tone: "danger",
+  },
 };
 
 /** Share of all features as an arc that grows in on mount. */
@@ -71,10 +91,12 @@ export function RoadmapPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Roadmap">
-        {FEATURES.length} features consolidadas de ~550 itens levantados em Home Assistant, openHAB,
-        Domoticz, ioBroker, Jeedom, Gladys, Homebridge e dashboards de homelab.
-      </PageHeader>
+      <PageHeader
+        title="Roadmap"
+        titleAs="h1"
+        icon={<MapTrifold size={22} weight="duotone" />}
+        description={`${FEATURES.length} features consolidadas de ~550 itens levantados em Home Assistant, openHAB, Domoticz, ioBroker, Jeedom, Gladys, Homebridge e dashboards de homelab.`}
+      />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {(Object.keys(STATUS) as Status[]).map((s, i) => (
@@ -103,48 +125,42 @@ export function RoadmapPage() {
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        <label className="glass flex min-h-12 flex-1 items-center gap-2 rounded-2xl px-4">
-          <MagnifyingGlass size={18} aria-hidden className="text-mute" />
-          <input
-            aria-label="Buscar feature"
-            placeholder="Buscar feature…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className="w-full bg-transparent text-sm outline-none placeholder:text-mute"
-          />
-        </label>
-        <select
-          aria-label="Categoria"
+      <div className="flex flex-wrap items-end gap-3">
+        <TextField
+          label="Buscar feature"
+          hideLabel
+          placeholder="Buscar feature…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          icon={<MagnifyingGlass size={18} aria-hidden />}
+          className="flex-1"
+        />
+        <Select
+          label="Categoria"
+          hideLabel
           value={cat}
-          onChange={(e) => setCat(e.target.value)}
-          className="glass min-h-12 rounded-2xl px-4 text-sm"
-        >
-          {cats.map((c) => (
-            <option key={c} className="bg-[#10142b]">
-              {c}
-            </option>
-          ))}
-        </select>
+          onChange={setCat}
+          options={cats.map((c) => ({ value: c, label: c }))}
+          className="w-48"
+        />
       </div>
 
       <p className="text-xs text-mute">{shown.length} resultado(s)</p>
       <ul className="grid gap-2 md:grid-cols-2">
         {shown.map((f) => (
-          <li key={`${f.category}-${f.name}`} className="glass rounded-2xl p-3.5">
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-sm font-semibold">{f.name}</p>
-              <span
-                className="shrink-0 rounded-full px-2 py-0.5 text-xs"
-                style={{ background: `${STATUS[f.status].color}26`, color: STATUS[f.status].color }}
-              >
-                {STATUS[f.status].label}
-              </span>
-            </div>
-            <p className="mt-0.5 text-xs text-mute">
-              {f.category} · {f.from.join(", ")}
-            </p>
-            <p className="mt-1 text-xs">{f.note}</p>
+          <li key={`${f.category}-${f.name}`}>
+            <Card surface="glass" padding="sm" className="h-full">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm font-semibold">{f.name}</p>
+                <Badge tone={STATUS[f.status].tone} appearance="soft" className="shrink-0">
+                  {STATUS[f.status].label}
+                </Badge>
+              </div>
+              <p className="mt-0.5 text-xs text-mute">
+                {f.category} · {f.from.join(", ")}
+              </p>
+              <p className="mt-1 text-xs">{f.note}</p>
+            </Card>
           </li>
         ))}
       </ul>

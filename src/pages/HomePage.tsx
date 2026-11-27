@@ -1,4 +1,5 @@
-import { ArrowsClockwise, FilmSlate, Moon, SignOut } from "@phosphor-icons/react";
+import { Button, Card, EmptyState, Spinner } from "@juninmd/sonido";
+import { ArrowsClockwise, FilmSlate, Moon, Plugs, SignOut } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { availableScenes } from "../data/demo";
 import { useProviders, useVisibleEntities } from "../state/providers";
@@ -40,20 +41,30 @@ export function HomePage({ onOpenProviders }: { onOpenProviders: () => void }) {
       />
 
       {notice && (
-        <p
+        <Card
+          surface="glass"
+          padding="sm"
           role="alert"
-          className="glass flex items-start justify-between gap-3 rounded-2xl border-rose/40 p-3 text-sm text-rose"
+          className="border-rose/40 text-sm text-rose"
         >
-          <span>{notice}</span>
-          <button type="button" onClick={() => setNotice(null)} className="shrink-0 underline">
-            fechar
-          </button>
-        </p>
+          <div className="flex items-start justify-between gap-3">
+            <span>{notice}</span>
+            <Button variant="link" size="sm" onClick={() => setNotice(null)} className="shrink-0">
+              fechar
+            </Button>
+          </div>
+        </Card>
       )}
       {failures.map(([id, message]) => (
-        <p key={id} role="alert" className="glass rounded-2xl border-rose/40 p-3 text-sm text-rose">
+        <Card
+          key={id}
+          surface="glass"
+          padding="sm"
+          role="alert"
+          className="border-rose/40 text-sm text-rose"
+        >
           {providers.find((p) => p.id === id)?.label ?? "Provedor"}: {message}
-        </p>
+        </Card>
       ))}
 
       {(scenes.length > 0 || providers.length > 0) && (
@@ -64,27 +75,30 @@ export function HomePage({ onOpenProviders }: { onOpenProviders: () => void }) {
           {scenes.map((s) => {
             const Icon = SCENE_ICON[s.id as keyof typeof SCENE_ICON] ?? Moon;
             return (
-              <button
+              <Button
                 key={s.id}
-                type="button"
+                variant="secondary"
+                size="lg"
+                className="shrink-0 rounded-full"
+                iconStart={<Icon size={20} weight="duotone" className="text-amber" aria-hidden />}
                 onClick={() => applyScene(s.id)}
-                className="glass flex min-h-12 shrink-0 items-center gap-2 rounded-full px-5 text-sm font-medium transition-transform active:scale-95"
               >
-                <Icon size={20} weight="duotone" className="text-amber" aria-hidden />
                 {s.name}
-              </button>
+              </Button>
             );
           })}
           {providers.length > 0 && (
-            <button
-              type="button"
-              onClick={() => void refresh()}
-              disabled={refreshing}
+            <Button
+              variant="secondary"
+              size="icon"
               aria-label="Atualizar dispositivos"
-              className="glass ml-auto grid size-12 shrink-0 place-items-center rounded-full disabled:opacity-60"
-            >
-              <ArrowsClockwise size={20} aria-hidden className={refreshing ? "animate-spin" : ""} />
-            </button>
+              className="ml-auto size-12 shrink-0"
+              disabled={refreshing}
+              onClick={() => void refresh()}
+              iconStart={
+                refreshing ? <Spinner size={18} /> : <ArrowsClockwise size={20} aria-hidden />
+              }
+            />
           )}
         </section>
       )}
@@ -107,13 +121,16 @@ export function HomePage({ onOpenProviders }: { onOpenProviders: () => void }) {
       </div>
 
       {shown.length === 0 ? (
-        <div className="glass rounded-3xl border-dashed p-8 text-center text-sm text-mute">
-          Nenhum dispositivo ainda.{" "}
-          <button type="button" onClick={onOpenProviders} className="text-teal underline">
-            Configure um provedor
-          </button>{" "}
-          para controlar suas tomadas e o Home Assistant.
-        </div>
+        <EmptyState
+          icon={<Plugs size={26} weight="duotone" />}
+          title="Nenhum dispositivo ainda"
+          description="Configure um provedor para controlar suas tomadas e o Home Assistant."
+          action={
+            <Button variant="primary" onClick={onOpenProviders}>
+              Configurar provedor
+            </Button>
+          }
+        />
       ) : (
         <section
           aria-label="Dispositivos"

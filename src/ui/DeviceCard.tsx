@@ -1,3 +1,4 @@
+import { Badge } from "@juninmd/sonido";
 import { useEffect, useRef } from "react";
 import type { Entity } from "../core/types";
 import { KIND_COLOR, KIND_ICON } from "./kinds";
@@ -83,9 +84,9 @@ export function DeviceCard({ entity, onToggle, index = 0, busy = false }: Props)
           <Icon size={28} weight="duotone" aria-hidden />
         </span>
         {badge ? (
-          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-mute">
+          <Badge tone="neutral" appearance="soft">
             {badge}
-          </span>
+          </Badge>
         ) : (
           !readOnly && (
             <span

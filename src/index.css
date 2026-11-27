@@ -1,6 +1,7 @@
 @import "@fontsource-variable/bricolage-grotesque/wght.css";
 @import "@fontsource-variable/instrument-sans/wght.css";
 @import "tailwindcss";
+@import "@juninmd/sonido/styles.css";
 
 /* Night house: a deep ink base, glass layers on top, lamp-amber as the one warm voice. */
 @theme {
@@ -19,6 +20,61 @@
   --font-display:
     "Bricolage Grotesque Variable", "Instrument Sans Variable", ui-sans-serif, sans-serif;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/*
+ * Sonido → Casa bridge: the design system keeps its structure and behaviour, but
+ * every token it reads lands on this house's ink, glass, lamp-amber and teal.
+ * Accent = teal (the app's action colour); gold = the lamp; rose = danger.
+ */
+:root {
+  --sn-color-bg: var(--color-bg);
+  --sn-color-surface: rgb(255 255 255 / 0.06);
+  --sn-color-surface-2: rgb(255 255 255 / 0.09);
+  --sn-color-surface-hover: rgb(255 255 255 / 0.14);
+  --sn-color-border: var(--color-line);
+  --sn-color-border-soft: rgb(255 255 255 / 0.08);
+  --sn-color-text: var(--color-ink);
+  --sn-color-text-dim: var(--color-mute);
+  --sn-color-text-faint: #8b95ab;
+  --sn-color-on-accent: #04120f;
+  --sn-color-on-danger: #1a0508;
+  --sn-color-accent: var(--color-teal);
+  --sn-color-accent-2: var(--color-sky);
+  --sn-color-aqua: var(--color-teal);
+  --sn-color-gold: var(--color-amber);
+  --sn-color-success: var(--color-teal);
+  --sn-color-warning: var(--color-amber);
+  --sn-color-danger: var(--color-rose);
+  --sn-color-info: var(--color-sky);
+  --sn-gradient: linear-gradient(135deg, #3de0c3, #6f9bff);
+  --sn-gradient-soft: linear-gradient(135deg, rgb(61 224 195 / 0.16), rgb(61 224 195 / 0.04));
+  --sn-glass: rgb(255 255 255 / 0.04);
+  --sn-glass-strong: rgb(16 19 36 / 0.94);
+  --sn-scrim: rgb(3 4 10 / 0.62);
+  --sn-glass-fill: linear-gradient(145deg, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.035));
+  --sn-glass-edge: var(--color-line);
+  --sn-font: var(--font-sans);
+  --sn-font-display: var(--font-display);
+  --sn-radius: 16px;
+  --sn-radius-lg: 24px;
+  --sn-shadow-card: 0 18px 40px -22px rgb(0 0 0 / 0.7);
+  --sn-shadow-pop: 0 24px 60px -18px rgb(0 0 0 / 0.78);
+  --sn-shadow-lift: 0 22px 46px -20px rgb(0 0 0 / 0.75);
+}
+
+/* Casa's pages keep a display-scale h1; Sonido's PageHeader defaults to --sn-text-lg. */
+.sn-pagehead__title {
+  font-size: clamp(1.625rem, 2.6vw, 2rem);
+  line-height: 1.15;
+}
+
+/* Tailwind's preflight zeroes the native <dialog> margin; keep Sonido centred. */
+.sn-dialog {
+  margin: auto;
+}
+.sn-dialog--drawer {
+  margin: 0 0 0 auto;
 }
 
 /* Registered so the lamp glow can ease between values instead of jumping. */

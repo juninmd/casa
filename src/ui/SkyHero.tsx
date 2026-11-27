@@ -1,5 +1,5 @@
+import { CountUp } from "@juninmd/sonido";
 import { useEffect, useRef, useState } from "react";
-import { CountUp } from "./CountUp";
 
 interface Props {
   lightsOn: number;

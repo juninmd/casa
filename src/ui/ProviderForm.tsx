@@ -1,3 +1,4 @@
+import { Button, Checkbox, TextField } from "@juninmd/sonido";
 import { useState } from "react";
 import {
   errText,
@@ -32,9 +33,6 @@ function newId(kind: ProviderKind, label: string, taken: string[]): string {
   for (let n = 2; taken.includes(id); n++) id = `${base}-${n}`;
   return id;
 }
-
-const input =
-  "min-h-12 w-full rounded-2xl border border-line bg-white/5 px-4 text-sm placeholder:text-mute/70 focus:border-teal/70";
 
 export function ProviderForm({ kind, initial, existingIds, discovered, onClose }: Props) {
   const save = useProviders((s) => s.save);
@@ -91,107 +89,90 @@ export function ProviderForm({ kind, initial, existingIds, discovered, onClose }
   }
 
   return (
-    <form onSubmit={submit} className="glass space-y-4 rounded-3xl border-teal/50 p-5">
-      <h2 className="font-display text-xl font-semibold">
-        {editing ? "Editar" : "Novo"} provedor {kind === "tapo" ? "Tapo" : "Home Assistant"}
-      </h2>
-
-      <label className="block text-sm">
-        <span className="mb-1 block text-mute">Nome</span>
-        <input
-          className={input}
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          required
-          maxLength={60}
-        />
-      </label>
+    <form onSubmit={submit} className="space-y-4">
+      <TextField
+        label="Nome"
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        required
+        maxLength={60}
+      />
 
       {kind === "tapo" ? (
-        <label className="block text-sm">
-          <span className="mb-1 block text-mute">IPs dos dispositivos (um por linha)</span>
-          <textarea
-            className={`${input} min-h-24 py-2 font-mono`}
+        <div>
+          <TextField
+            multiline
+            rows={4}
+            label="IPs dos dispositivos (um por linha)"
             value={hosts}
             onChange={(e) => setHosts(e.target.value)}
             placeholder="192.168.1.11"
+            style={{ fontFamily: "var(--sn-font-mono)" }}
             required
           />
           {discovered.length > 0 && (
-            <button
-              type="button"
+            <Button
+              variant="link"
+              size="sm"
+              className="mt-1"
               onClick={() => setHosts(discovered.join("\n"))}
-              className="mt-1 text-xs text-teal underline"
             >
               Usar os {discovered.length} Tapo encontrados na varredura
-            </button>
+            </Button>
           )}
-        </label>
+        </div>
       ) : (
         <>
-          <label className="block text-sm">
-            <span className="mb-1 block text-mute">URL do Home Assistant</span>
-            <input
-              className={input}
-              value={baseUrl}
-              onChange={(e) => setBaseUrl(e.target.value)}
-              placeholder="http://homeassistant.local:8123"
-              inputMode="url"
-              required
-            />
-          </label>
+          <TextField
+            label="URL do Home Assistant"
+            value={baseUrl}
+            onChange={(e) => setBaseUrl(e.target.value)}
+            placeholder="http://homeassistant.local:8123"
+            inputMode="url"
+            required
+          />
           {baseUrl.trim().startsWith("https://") && (
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={selfSigned}
-                onChange={(e) => setSelfSigned(e.target.checked)}
-              />
-              Aceitar certificado autoassinado (menos seguro)
-            </label>
+            <Checkbox
+              checked={selfSigned}
+              onChange={setSelfSigned}
+              label="Aceitar certificado autoassinado"
+              description="Menos seguro: só use em uma rede em que você confia."
+            />
           )}
         </>
       )}
 
       {kind === "tapo" && (
-        <label className="block text-sm">
-          <span className="mb-1 block text-mute">E-mail da conta TP-Link</span>
-          <input
-            className={input}
-            type="email"
-            autoComplete="off"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder={
-              editing && initial?.hasCredentials ? "salvo no cofre (deixe vazio para manter)" : ""
-            }
-            required={needSecret}
-          />
-        </label>
-      )}
-
-      <label className="block text-sm">
-        <span className="mb-1 block text-mute">{secretName}</span>
-        <input
-          className={input}
-          type="password"
+        <TextField
+          label="E-mail da conta TP-Link"
+          type="email"
           autoComplete="off"
-          value={secret}
-          onChange={(e) => setSecret(e.target.value)}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           placeholder={
-            editing && initial?.hasCredentials ? "salva no cofre (deixe vazio para manter)" : ""
+            editing && initial?.hasCredentials ? "salvo no cofre (deixe vazio para manter)" : ""
           }
           required={needSecret}
         />
-      </label>
+      )}
+
+      <TextField
+        label={secretName}
+        type="password"
+        autoComplete="off"
+        value={secret}
+        onChange={(e) => setSecret(e.target.value)}
+        placeholder={
+          editing && initial?.hasCredentials ? "salva no cofre (deixe vazio para manter)" : ""
+        }
+        hint="A credencial vai direto para o cofre do sistema e nunca volta para esta tela."
+        required={needSecret}
+      />
       {destinationChanged && (
         <p className="text-xs text-amber">
           O destino mudou: por segurança, digite a credencial de novo.
         </p>
       )}
-      <p className="text-xs text-mute">
-        A credencial vai direto para o cofre do sistema e nunca volta para esta tela.
-      </p>
 
       {error && (
         <p role="alert" className="rounded-xl bg-rose/15 p-3 text-sm text-rose">
@@ -209,20 +190,12 @@ export function ProviderForm({ kind, initial, existingIds, discovered, onClose }
       )}
 
       <div className="flex gap-3">
-        <button
-          type="submit"
-          disabled={busy}
-          className="min-h-12 rounded-2xl bg-teal px-6 text-sm font-semibold text-bg shadow-[0_8px_24px_-8px_#3de0c3] transition-transform active:scale-95 disabled:opacity-50"
-        >
+        <Button type="submit" variant="primary" size="lg" loading={busy}>
           {busy ? "Salvando…" : "Salvar e testar"}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="min-h-12 rounded-2xl border border-line px-6 text-sm transition-colors hover:bg-white/8"
-        >
+        </Button>
+        <Button variant="secondary" size="lg" onClick={onClose}>
           {report?.ok ? "Concluir" : "Cancelar"}
-        </button>
+        </Button>
       </div>
     </form>
   );
